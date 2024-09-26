@@ -13,12 +13,12 @@ class GymWrapper(gym.Env):
         self.I = I
         self.P = P
         self.daily_events = []  # 매일 발생하는 이벤트를 저장할 빈 리스트를 초기화
-        self.env, self.inventoryList, self.procurementList, self.productionList, self.sales, self.customer, self.supplierList, self.daily_events = create_env(I, P, self.daily_events)  # reate_env 함수를 통해 다양한 환경 구성 요소를 생성하고, 이를 인스턴스 변수로 저장하여 클래스의 다른 메소드나 기능에서 활용할 수 있도록 함
+        self.env, self.inventoryList, self.procurementList, self.productionList, self.sales, self.customer, self.supplierList, self.daily_events = create_env(I, P, self.daily_events)  # create_env 함수를 통해 다양한 환경 구성 요소를 생성하고, 이를 인스턴스 변수로 저장하여 클래스의 다른 메소드나 기능에서 활용할 수 있도록 함
 
-        self.max_order_quantity = 5  # 에이전트는 특정 재료를 0 또는 1 단위만 주문할 수 있음
-        self.action_space = spaces.Discrete(6)  # [재료 인덱스, 주문 수량] 형태로 print
+        self.max_order_quantity = 1  # 에이전트는 특정 재료를 0 또는 1 단위만 주문할 수 있음
+        self.action_space = spaces.Discrete(2)  # [재료 인덱스, 주문 수량] 형태로 print
         
-        self.observation_space = spaces.MultiDiscrete([51, 51])
+        self.observation_space = spaces.MultiDiscrete([51, 51])  # total_inventory 공간 51개, on-hand_inventory 공간 51
         
     def reset(self):  # 환경을 초기화하고, 에이전트가 새로운 에피소드를 시작할 때 호출
         self.env = simpy.Environment()  # simpy 라이브러리를 사용하여 새로운 시뮬레이션 환경을 생성
@@ -45,7 +45,7 @@ class GymWrapper(gym.Env):
 
         self.update_daily_report()  # 현재 일일 보고서를 업데이트
 
-        DAILY_COST_REPORT = Cost.cal_cost(instance, cost_type)
+        DAILY_COST_REPORT = Cost.cal_cost(instance, cost_type)  ########## environment.py에서 cost 불러오는 함수 아직 구현 미완성 ##########
 
         total_cost = sum(GymWrapper.DAILY_COST_REPORT.values())  # 모든 비용을 합산하여 총 비용을 계산
 
@@ -86,4 +86,7 @@ if __name__ == "__main__":  # 이 파일이 직접 실행될 때만 아래 코�
         obs, reward, done, info = env.step(action)  # 선택한 행동을 환경에 적용하고, 새로운 관측 값, 보상, 종료 여부, 추가 정보를 반환받음
 
     print(f"Observation: {obs}, Reward: {reward}, Done: {done}")
-    print(f"Info: {info['daily_events'][-3:] if info['daily_events'] else []}")
+    if info['daily_events']:
+        print(f"Info: {info['daily_events'][-3:]}")  # 마지막 3개의 이벤트 출력
+    else:
+        print("No daily events.")
